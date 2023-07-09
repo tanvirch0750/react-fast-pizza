@@ -1,4 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState } from 'react';
+import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
+import { ICartItem, IOrder } from '../../types/globalTypes';
+import { createOrder } from '../../services/apiRestaurant';
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str: string) =>
@@ -6,7 +10,11 @@ const isValidPhone = (str: string) =>
     str
   );
 
-const fakeCart = [
+type errorsObj = {
+  phone?: string;
+};
+
+const fakeCart: ICartItem[] = [
   {
     pizzaId: 12,
     name: 'Mediterranean',
@@ -31,6 +39,12 @@ const fakeCart = [
 ];
 
 function CreateOrder() {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting';
+
+  // to catch error
+  const formErrors = useActionData();
+
   // const [withPriority, setWithPriority] = useState(false);
   const cart = fakeCart;
 
@@ -38,7 +52,7 @@ function CreateOrder() {
     <div>
       <h2>Ready to order? Let's go!</h2>
 
-      <form>
+      <Form method="POST">
         <div>
           <label>First Name</label>
           <input type="text" name="customer" required />
@@ -49,6 +63,9 @@ function CreateOrder() {
           <div>
             <input type="tel" name="phone" required />
           </div>
+          {(formErrors as errorsObj)?.phone && (
+            <p>{(formErrors as errorsObj)?.phone}</p>
+          )}
         </div>
 
         <div>
@@ -70,11 +87,41 @@ function CreateOrder() {
         </div>
 
         <div>
-          <button>Order now</button>
+          <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <button disabled={isSubmitting}>
+            {isSubmitting ? 'Placing Order...' : 'Order now'}
+          </button>
         </div>
-      </form>
+      </Form>
     </div>
   );
+}
+
+export async function action({ request }: { request: Request }) {
+  const formData = await request.formData();
+  const data = Object.fromEntries(
+    Array.from(formData.entries()).map(([key, value]) => [
+      key,
+      value.toString(),
+    ])
+  );
+
+  const order: Partial<IOrder> = {
+    ...data,
+    cart: JSON.parse(data.cart) as ICartItem[],
+    priority: data.priority === 'on',
+  };
+
+  const errors: errorsObj = {};
+  if (!isValidPhone(order.phone!))
+    errors.phone =
+      'Please Give us your correct phone number. We might need to contact you.';
+
+  if (Object.keys(errors).length > 0) return errors;
+
+  const newOrder = await createOrder(order);
+
+  return redirect(`/order/${newOrder.id}`);
 }
 
 export default CreateOrder;

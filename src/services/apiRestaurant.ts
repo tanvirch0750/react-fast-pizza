@@ -22,7 +22,7 @@ export async function getOrder(id: string): Promise<IOrder> {
   return data;
 }
 
-export async function createOrder(newOrder: string) {
+export async function createOrder(newOrder: Partial<IOrder>) {
   try {
     const res = await fetch(`${API_URL}/order`, {
       method: 'POST',
