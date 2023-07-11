@@ -1,13 +1,13 @@
 import { getAddress } from '../../services/apiGeocoding';
 import { IMapPosition } from '../../types/globalTypes';
 
-function getPosition() {
+export function getPosition() {
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-async function fetchAddress() {
+export async function fetchAddress() {
   // 1) We get the user's geolocation position
   const positionObj = await getPosition();
   // const position: IMapPosition = {

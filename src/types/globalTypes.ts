@@ -8,7 +8,7 @@ export type IPizza = {
 };
 
 export type ICartItem = {
-  pizzaId: number;
+  pizzaId: number | string;
   name: string;
   quantity: number;
   unitPrice: number;
