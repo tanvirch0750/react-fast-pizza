@@ -40,7 +40,7 @@ export async function createOrder(newOrder: Partial<IOrder>) {
   }
 }
 
-export async function updateOrder(id: string, updateObj: Partial<IPizza>) {
+export async function updateOrder(id: string, updateObj: Partial<IOrder>) {
   try {
     const res = await fetch(`${API_URL}/order/${id}`, {
       method: 'PATCH',

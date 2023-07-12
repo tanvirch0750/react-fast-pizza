@@ -1,18 +1,30 @@
 /* eslint-disable react-refresh/only-export-components */
 // Test ID: IIDSAT
 
-import { Params, useLoaderData } from 'react-router-dom';
+import { Params, useFetcher, useLoaderData } from 'react-router-dom';
 import { getOrder } from '../../services/apiRestaurant';
-import { ICartItem, IOrder } from '../../types/globalTypes';
+import { ICartItem, IOrder, IPizza } from '../../types/globalTypes';
 import {
   calcMinutesLeft,
   formatCurrency,
   formatDate,
 } from '../../utils/helpers';
 import OrderItem from './OrderItem';
+import { useEffect } from 'react';
+import UpdateOrder from './UpdateOrder';
 
 function Order() {
   const order: IOrder = useLoaderData() as IOrder;
+
+  // fetching menu data
+  const fetcher = useFetcher();
+  useEffect(
+    function () {
+      if (!fetcher.data && fetcher.state === 'idle') fetcher.load('/menu');
+    },
+    [fetcher]
+  );
+
   const {
     id,
     status,
@@ -54,7 +66,15 @@ function Order() {
 
       <ul className="divide-y divide-stone-200 border-b border-t">
         {cart.map((item: ICartItem) => (
-          <OrderItem key={item.pizzaId} item={item} />
+          <OrderItem
+            key={item.pizzaId}
+            item={item}
+            ingredients={
+              (fetcher?.data as IPizza[])?.find((el) => el.id === item.pizzaId)
+                ?.ingredients ?? []
+            }
+            isLoadingIngredients={fetcher.state === 'loading'}
+          />
         ))}
       </ul>
 
@@ -71,6 +91,8 @@ function Order() {
           To pay on delivery: {formatCurrency(orderPrice + priorityPrice)}
         </p>
       </div>
+
+      {!priority && <UpdateOrder order={order} />}
     </div>
   );
 }
